@@ -1,50 +1,42 @@
-import { buildTrendReport, formatTrendReport, configureTrendWindow } from './trend';
-import { loadHistoryFromFile } from './history';
-import { serializeReport } from './output';
-import * as fs from 'fs';
-import * as path from 'path';
+import { buildTrendReport, formatTrendReport, configureTrendWindow, resetTrend } from './trend';
+import { getHistory } from './history';
+import { PortEvent } from './snapshot';
 
 export interface TrendCommandOptions {
-  windowMin?: number;
-  historyFile?: string;
+  windowMinutes?: number;
+  port?: number;
   json?: boolean;
-  output?: string;
 }
 
-export async function runTrendCommand(options: TrendCommandOptions = {}): Promise<void> {
-  const windowMin = options.windowMin ?? 60;
-  const windowMs = windowMin * 60 * 1000;
+export function runTrendCommand(options: TrendCommandOptions = {}): string {
+  const windowMinutes = options.windowMinutes ?? 60;
+  const windowMs = windowMinutes * 60 * 1000;
 
   configureTrendWindow(windowMs);
 
-  if (options.historyFile) {
-    const resolved = path.resolve(options.historyFile);
-    if (!fs.existsSync(resolved)) {
-      console.error(`History file not found: ${resolved}`);
-      process.exit(1);
-    }
-    loadHistoryFromFile(resolved);
-  }
+  const history = getHistory();
+  const events: PortEvent[] = history.map((entry) => ({
+    port: entry.port,
+    protocol: entry.protocol,
+    state: entry.state,
+    pid: entry.pid,
+    timestamp: entry.timestamp,
+    type: entry.type,
+  }));
 
-  const report = buildTrendReport(windowMs);
+  const filtered = options.port
+    ? events.filter((e) => e.port === options.port)
+    : events;
+
+  const report = buildTrendReport(filtered);
 
   if (options.json) {
-    const serialized = serializeReport(report as unknown as Parameters<typeof serializeReport>[0], 'json');
-    if (options.output) {
-      fs.writeFileSync(path.resolve(options.output), serialized, 'utf-8');
-      console.log(`Trend report written to ${options.output}`);
-    } else {
-      console.log(serialized);
-    }
-    return;
+    return JSON.stringify(report, null, 2);
   }
 
-  const formatted = formatTrendReport(report);
+  return formatTrendReport(report);
+}
 
-  if (options.output) {
-    fs.writeFileSync(path.resolve(options.output), formatted, 'utf-8');
-    console.log(`Trend report written to ${options.output}`);
-  } else {
-    console.log(formatted);
-  }
+export function resetTrendCommand(): void {
+  resetTrend();
 }
