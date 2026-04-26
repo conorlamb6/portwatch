@@ -39,7 +39,8 @@ export function loadConfig(configPath?: string): PortwatchConfig {
     const parsed = JSON.parse(raw) as Partial<PortwatchConfig>;
     return mergeConfig(DEFAULT_CONFIG, parsed);
   } catch (err) {
-    console.warn(`[portwatch] Failed to parse config at ${resolvedPath}. Using defaults.`);
+    const reason = err instanceof SyntaxError ? `Invalid JSON: ${err.message}` : String(err);
+    console.warn(`[portwatch] Failed to parse config at ${resolvedPath} (${reason}). Using defaults.`);
     return { ...DEFAULT_CONFIG };
   }
 }
