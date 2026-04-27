@@ -72,4 +72,11 @@ describe('notifier', () => {
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
   });
+
+  it('includes timestamp in console output', () => {
+    const spy = jest.spyOn(console, 'log').mockImplementation(() => {});
+    sendNotification(makePayload({ timestamp: new Date('2024-06-15T12:30:00Z') }));
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining('2024-06-15'));
+    spy.mockRestore();
+  });
 });
