@@ -56,3 +56,16 @@ export function pruneSnapshots(maxAge: number): void {
 export function snapshotCount(): number {
   return snapshots.length;
 }
+
+/**
+ * Returns a diff between the two most recent snapshots, or null if fewer
+ * than two snapshots exist.
+ */
+export function diffLatestSnapshots(): SnapshotDiff | null {
+  if (snapshots.length < 2) {
+    return null;
+  }
+  const prev = snapshots[snapshots.length - 2];
+  const next = snapshots[snapshots.length - 1];
+  return diffSnapshots(prev, next);
+}
