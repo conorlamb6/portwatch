@@ -75,3 +75,14 @@ export function formatAnomalyResult(result: AnomalyResult): string {
   const tag = `[ANOMALY:${result.severity.toUpperCase()}]`;
   return `${tag} port=${result.port} proto=${result.protocol} — ${result.reason}`;
 }
+
+/**
+ * Filters a list of anomaly results by severity level.
+ * Useful for alerting pipelines that only care about high or medium severity events.
+ */
+export function filterBySeverity(
+  results: AnomalyResult[],
+  severity: AnomalyResult['severity']
+): AnomalyResult[] {
+  return results.filter((r) => r.severity === severity);
+}
