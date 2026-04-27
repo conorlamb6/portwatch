@@ -63,4 +63,20 @@ describe('runTrendCommand', () => {
     jest.spyOn(historyModule, 'getHistory').mockReturnValue([]);
     expect(() => runTrendCommand()).not.toThrow();
   });
+
+  it('returns valid JSON array when json option is true and history is empty', () => {
+    jest.spyOn(historyModule, 'getHistory').mockReturnValue([]);
+    const result = runTrendCommand({ json: true });
+    expect(() => JSON.parse(result)).not.toThrow();
+    const parsed = JSON.parse(result);
+    expect(typeof parsed).toBe('object');
+  });
+
+  it('does not include events from other ports when port filter is applied', () => {
+    jest.spyOn(historyModule, 'getHistory').mockReturnValue(mockHistory as any);
+    const buildSpy = jest.spyOn(trendModule, 'buildTrendReport');
+    runTrendCommand({ port: 8080 });
+    const passedEvents = buildSpy.mock.calls[0][0];
+    expect(passedEvents.some((e: any) => e.port === 3000)).toBe(false);
+  });
 });
